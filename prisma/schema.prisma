@@ -107,7 +107,32 @@ model Project {
   decisions         DecisionLog[]
   landingMetrics    LandingMetricDaily[]
   landingPages      LandingPage[]
+  backendConversions BackendConversion[]
+  auditReports      AuditReport[]
   createdAt         DateTime             @default(now())
+}
+
+model BackendConversion {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
+  campaignId  String
+  date        DateTime
+  conversions Int
+  revenue     Float
+  source      String
+  createdAt   DateTime @default(now())
+  @@index([projectId, campaignId, date])
+}
+
+model AuditReport {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
+  generatedAt DateTime @default(now())
+  reportJson  Json
+  aiSummary   String
+  @@index([projectId, generatedAt])
 }
 
 model MetaAdAccount {

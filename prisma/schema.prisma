@@ -1,0 +1,268 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  name          String?
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  memberships   Membership[]
+  decisions     DecisionLog[]
+  createdAt     DateTime     @default(now())
+}
+
+model Account {
+  id                   String  @id @default(cuid())
+  userId               String
+  type                 String
+  provider             String
+  providerAccountId    String
+  refresh_token        String?
+  access_token         String?
+  expires_at           Int?
+  token_type           String?
+  scope                String?
+  id_token             String?
+  session_state        String?
+  encrypted_meta_token String?
+  user                 User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  @@unique([identifier, token])
+}
+
+model Organization {
+  id          String         @id @default(cuid())
+  name        String
+  type        OrgType        @default(CLIENT)
+  parentOrgId String?
+  parent      Organization?  @relation("OrgHierarchy", fields: [parentOrgId], references: [id])
+  children    Organization[] @relation("OrgHierarchy")
+  memberships Membership[]
+  projects    Project[]
+  createdAt   DateTime       @default(now())
+}
+
+enum OrgType {
+  AGENCY
+  CLIENT
+}
+
+model Membership {
+  id        String       @id @default(cuid())
+  userId    String
+  orgId     String
+  role      OrgRole      @default(ANALYST)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+  @@unique([userId, orgId])
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  OPERATOR
+  ANALYST
+}
+
+model Project {
+  id                String               @id @default(cuid())
+  name              String
+  orgId             String
+  org               Organization         @relation(fields: [orgId], references: [id])
+  billingOwnerOrgId String?
+  metaAdAccountId   String?
+  pixelId           String?
+  adAccounts        MetaAdAccount[]
+  campaigns         AdCampaign[]
+  adSets            AdSet[]
+  creatives         AdCreative[]
+  ads               Ad[]
+  insightDailys     InsightDaily[]
+  experiments       Experiment[]
+  evidenceSnapshots EvidenceSnapshot[]
+  decisions         DecisionLog[]
+  landingMetrics    LandingMetricDaily[]
+  createdAt         DateTime             @default(now())
+}
+
+model MetaAdAccount {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
+  adAccountId String
+  name        String
+  currency    String
+  timezone    String
+  createdAt   DateTime @default(now())
+}
+
+model AdCampaign {
+  id                  String   @id @default(cuid())
+  projectId           String
+  project             Project  @relation(fields: [projectId], references: [id])
+  metaCampaignId      String
+  name                String
+  objective           String
+  status              String   @default("PAUSED")
+  dailyBudgetCents    Int?
+  lifetimeBudgetCents Int?
+  adSets              AdSet[]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model AdSet {
+  id               String     @id @default(cuid())
+  projectId        String
+  project          Project    @relation(fields: [projectId], references: [id])
+  metaAdSetId      String
+  campaignId       String
+  campaign         AdCampaign @relation(fields: [campaignId], references: [id])
+  name             String
+  targeting_json   Json
+  optimizationGoal String
+  billingEvent     String
+  bidStrategy      String
+  budgetCents      Int
+  status           String     @default("PAUSED")
+  startTime        DateTime
+  endTime          DateTime?
+  ads              Ad[]
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+}
+
+model AdCreative {
+  id             String   @id @default(cuid())
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id])
+  metaCreativeId String
+  name           String
+  type           String
+  asset_json     Json
+  ads            Ad[]
+  createdAt      DateTime @default(now())
+}
+
+model Ad {
+  id         String     @id @default(cuid())
+  projectId  String
+  project    Project    @relation(fields: [projectId], references: [id])
+  metaAdId   String
+  adSetId    String
+  adSet      AdSet      @relation(fields: [adSetId], references: [id])
+  creativeId String
+  creative   AdCreative @relation(fields: [creativeId], references: [id])
+  name       String
+  status     String     @default("PAUSED")
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model InsightDaily {
+  id           String   @id @default(cuid())
+  projectId    String
+  project      Project  @relation(fields: [projectId], references: [id])
+  date         DateTime
+  level        String
+  entityId     String
+  metrics_json Json
+  createdAt    DateTime @default(now())
+  @@unique([projectId, date, level, entityId])
+}
+
+model Experiment {
+  id                 String           @id @default(cuid())
+  projectId          String
+  project            Project          @relation(fields: [projectId], references: [id])
+  name               String
+  type               String
+  status             ExperimentStatus @default(PLANNED)
+  hypothesis         String
+  variants_json      Json
+  decisionRules_json Json
+  startedAt          DateTime?
+  endedAt            DateTime?
+  runs               ExperimentRun[]
+  createdAt          DateTime         @default(now())
+}
+
+enum ExperimentStatus {
+  PLANNED
+  RUNNING
+  STOPPED
+  COMPLETED
+}
+
+model ExperimentRun {
+  id               String     @id @default(cuid())
+  experimentId     String
+  experiment       Experiment @relation(fields: [experimentId], references: [id])
+  status           String
+  allocations_json Json
+  results_json     Json
+  decision_json    Json
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+}
+
+model EvidenceSnapshot {
+  id            String   @id @default(cuid())
+  projectId     String
+  project       Project  @relation(fields: [projectId], references: [id])
+  experimentId  String?
+  source        String
+  snapshot_json Json
+  createdAt     DateTime @default(now())
+}
+
+model DecisionLog {
+  id                 String   @id @default(cuid())
+  projectId          String
+  project            Project  @relation(fields: [projectId], references: [id])
+  decisionType       String
+  decision_json      Json
+  evidenceRefs_json  Json
+  promptHash         String?
+  model              String?
+  createdByUserId    String?
+  createdByUser      User?    @relation(fields: [createdByUserId], references: [id])
+  createdByAgentName String?
+  createdAt          DateTime @default(now())
+}
+
+model LandingMetricDaily {
+  id            String   @id @default(cuid())
+  projectId     String
+  project       Project  @relation(fields: [projectId], references: [id])
+  date          DateTime
+  eventType     String
+  count         Int      @default(0)
+  metadata_json Json?
+  createdAt     DateTime @default(now())
+  @@unique([projectId, date, eventType])
+}

@@ -1,7 +1,7 @@
 "use client"
-import Link from "next/link"
 import { useEffect, useState } from "react"
 import OrgSwitcher from "@/components/OrgSwitcher"
+import { GlobalNav } from "@/components/GlobalNav"
 
 interface Project {
   id: string
@@ -43,30 +43,11 @@ export default function ProjectsPage() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
-      <header className="sticky top-0 z-30 border-b border-gray-800 bg-gray-950/95 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-6 py-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-6">
-            <Link href="/dashboard" className="text-base font-semibold tracking-tight text-white">
-              Growth Engine
-            </Link>
-            <nav className="flex items-center gap-2 text-sm text-gray-400">
-              <Link href="/orgs" className="rounded-md px-3 py-1.5 transition hover:bg-gray-800 hover:text-white">
-                Organizations
-              </Link>
-              <Link href="/projects" className="rounded-md bg-gray-800 px-3 py-1.5 text-white">
-                Projects
-              </Link>
-              <Link href="/dashboard" className="rounded-md px-3 py-1.5 transition hover:bg-gray-800 hover:text-white">
-                Dashboard
-              </Link>
-            </nav>
-          </div>
-
-          <div className="[&_select]:rounded-md [&_select]:border [&_select]:border-gray-700 [&_select]:bg-gray-900 [&_select]:px-3 [&_select]:py-2 [&_select]:text-sm [&_select]:text-gray-200 [&_select]:outline-none [&_select]:transition [&_select]:focus:border-indigo-500 [&_select]:focus:ring-1 [&_select]:focus:ring-indigo-500/40">
-            <OrgSwitcher />
-          </div>
+      <GlobalNav activePage="projects">
+        <div className="[&_select]:rounded-md [&_select]:border [&_select]:border-gray-700 [&_select]:bg-gray-900 [&_select]:px-3 [&_select]:py-2 [&_select]:text-sm [&_select]:text-gray-200 [&_select]:outline-none [&_select]:transition [&_select]:focus:border-indigo-500 [&_select]:focus:ring-1 [&_select]:focus:ring-indigo-500/40">
+          <OrgSwitcher />
         </div>
-      </header>
+      </GlobalNav>
 
       <main className="mx-auto w-full max-w-7xl px-6 py-10">
         <section className="mb-8 flex flex-wrap items-end justify-between gap-4">

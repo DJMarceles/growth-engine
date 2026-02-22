@@ -4,6 +4,7 @@ import { cookies, headers } from "next/headers"
 import prisma from "@/lib/prisma"
 import OrgSwitcher from "@/components/OrgSwitcher"
 import OrganizationSection from "@/components/dashboard/OrganizationSection"
+import { GlobalNav } from "@/components/GlobalNav"
 
 export const dynamic = "force-dynamic"
 
@@ -339,37 +340,16 @@ async function loadDashboardData({
 
 function TopBar({ projectIdFilter }: { projectIdFilter?: string }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-gray-800 bg-gray-950/95 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-6 py-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="text-base font-semibold tracking-tight text-white">
-            Growth Engine
-          </Link>
-          <nav className="flex items-center gap-2 text-sm text-gray-400">
-            <Link href="/orgs" className="rounded-md px-3 py-1.5 transition hover:bg-gray-800 hover:text-white">
-              Organizations
-            </Link>
-            <Link href="/projects" className="rounded-md px-3 py-1.5 transition hover:bg-gray-800 hover:text-white">
-              Projects
-            </Link>
-            <Link href="/dashboard" className="rounded-md bg-gray-800 px-3 py-1.5 text-white">
-              Dashboard
-            </Link>
-          </nav>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          {projectIdFilter && (
-            <span className="rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-300">
-              Project filter active
-            </span>
-          )}
-          <div className="[&_select]:rounded-md [&_select]:border [&_select]:border-gray-700 [&_select]:bg-gray-900 [&_select]:px-3 [&_select]:py-2 [&_select]:text-sm [&_select]:text-gray-200 [&_select]:outline-none [&_select]:transition [&_select]:focus:border-indigo-500 [&_select]:focus:ring-1 [&_select]:focus:ring-indigo-500/40">
-            <OrgSwitcher />
-          </div>
-        </div>
+    <GlobalNav activePage="dashboard">
+      {projectIdFilter && (
+        <span className="rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-300">
+          Project filter active
+        </span>
+      )}
+      <div className="[&_select]:rounded-md [&_select]:border [&_select]:border-gray-700 [&_select]:bg-gray-900 [&_select]:px-3 [&_select]:py-2 [&_select]:text-sm [&_select]:text-gray-200 [&_select]:outline-none [&_select]:transition [&_select]:focus:border-indigo-500 [&_select]:focus:ring-1 [&_select]:focus:ring-indigo-500/40">
+        <OrgSwitcher />
       </div>
-    </header>
+    </GlobalNav>
   )
 }
 

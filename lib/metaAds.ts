@@ -89,29 +89,28 @@ export async function createAdSet(
   params: {
     name: string
     campaignId: string
-    targeting: Record<string, unknown>
-    optimizationGoal: string
-    billingEvent: string
-    bidStrategy: string
-    budgetCents: number
-    startTime: string
-    endTime?: string
+    dailyBudget: number
+    targeting: {
+      age_min: number
+      age_max: number
+      genders: number[]
+      geo_locations: Record<string, unknown>
+    }
+    optimization_goal: string
+    billing_event: string
     status: string
   }
 ) {
   const body: Record<string, unknown> = {
     name: params.name,
     campaign_id: params.campaignId,
+    daily_budget: params.dailyBudget,
     targeting: params.targeting,
-    optimization_goal: params.optimizationGoal,
-    billing_event: params.billingEvent,
-    bid_strategy: params.bidStrategy,
-    daily_budget: params.budgetCents,
-    start_time: params.startTime,
+    optimization_goal: params.optimization_goal,
+    billing_event: params.billing_event,
     status: params.status,
     access_token: accessToken,
   }
-  if (params.endTime) body.end_time = params.endTime
   return metaFetch(`${adAccountId}/adsets`, accessToken, {
     method: "POST",
     body: JSON.stringify(body),
@@ -132,18 +131,56 @@ export async function createCreative(
 export async function createAd(
   accessToken: string,
   adAccountId: string,
-  params: { name: string; adsetId: string; creativeId: string; status: string }
+  params: {
+    name: string
+    adsetId: string
+    creative: {
+      title: string
+      body: string
+      imageUrl: string
+      linkUrl: string
+    }
+    status: string
+  }
 ) {
-  return metaFetch(`${adAccountId}/ads`, accessToken, {
+  const objectStorySpec: Record<string, unknown> = {
+    link_data: {
+      name: params.creative.title,
+      message: params.creative.body,
+      image_url: params.creative.imageUrl,
+      link: params.creative.linkUrl,
+    },
+  }
+
+  if (process.env.META_PAGE_ID) {
+    objectStorySpec.page_id = process.env.META_PAGE_ID
+  }
+
+  const metaCreative = (await metaFetch(`${adAccountId}/adcreatives`, accessToken, {
+    method: "POST",
+    body: JSON.stringify({
+      name: `${params.name} creative`,
+      object_story_spec: objectStorySpec,
+      access_token: accessToken,
+    }),
+  })) as { id?: string }
+
+  if (!metaCreative.id) {
+    throw new Error("Meta creative create failed: missing id")
+  }
+
+  const metaAd = (await metaFetch(`${adAccountId}/ads`, accessToken, {
     method: "POST",
     body: JSON.stringify({
       name: params.name,
       adset_id: params.adsetId,
-      creative: { creative_id: params.creativeId },
+      creative: { creative_id: metaCreative.id },
       status: params.status,
       access_token: accessToken,
     }),
-  })
+  })) as { id?: string }
+
+  return { ...metaAd, creativeId: metaCreative.id }
 }
 
 export async function updateStatus(

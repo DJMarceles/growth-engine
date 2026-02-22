@@ -7,12 +7,12 @@ import { listPixels } from "@/lib/metaAds"
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const { searchParams } = new URL(req.url)
   const adAccountId = searchParams.get("adAccountId")
   if (!adAccountId) return NextResponse.json({ error: "adAccountId required" }, { status: 400 })
   const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
+    where: { id: session.user.id },
     include: { accounts: { where: { provider: "facebook" } } },
   })
   const enc = user?.accounts[0]?.encrypted_meta_token

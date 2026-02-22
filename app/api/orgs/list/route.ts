@@ -5,8 +5,8 @@ import prisma from "@/lib/prisma"
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const user = await prisma.user.findUnique({ where: { email: session.user.email } })
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const user = await prisma.user.findUnique({ where: { id: session.user.id } })
   if (!user) return NextResponse.json({ orgs: [] })
   const memberships = await prisma.membership.findMany({
     where: { userId: user.id }, include: { org: true },

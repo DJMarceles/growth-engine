@@ -1,11 +1,17 @@
 import NextAuth, { type NextAuthOptions } from "next-auth"
 import FacebookProvider from "next-auth/providers/facebook"
 import { PrismaAdapter } from "@auth/prisma-adapter"
+import type { Adapter, AdapterUser } from "next-auth/adapters"
 import prisma from "@/lib/prisma"
 import { encrypt } from "@/lib/encryption"
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  adapter: {
+    ...PrismaAdapter(prisma),
+    createUser: (data: Omit<AdapterUser, "id">) => {
+      return prisma.user.create({ data: { ...data, email: data.email ?? null } })
+    },
+  } as Adapter,
   providers: [
     FacebookProvider({
       clientId: process.env.META_APP_ID!,
@@ -13,13 +19,10 @@ export const authOptions: NextAuthOptions = {
       authorization: {
         params: {
           scope: [
-            "email",
-            "public_profile",
-            "ads_management",
             "ads_read",
+            "ads_management",
             "business_management",
-            "pages_show_list",
-            "pages_read_engagement",
+            "public_profile",
           ].join(","),
         },
       },

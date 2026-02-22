@@ -9,7 +9,7 @@ datasource db {
 
 model User {
   id            String       @id @default(cuid())
-  email         String       @unique
+  email         String?      @unique
   name          String?
   emailVerified DateTime?
   image         String?
@@ -106,6 +106,7 @@ model Project {
   evidenceSnapshots EvidenceSnapshot[]
   decisions         DecisionLog[]
   landingMetrics    LandingMetricDaily[]
+  landingPages      LandingPage[]
   createdAt         DateTime             @default(now())
 }
 
@@ -265,4 +266,16 @@ model LandingMetricDaily {
   metadata_json Json?
   createdAt     DateTime @default(now())
   @@unique([projectId, date, eventType])
+}
+
+model LandingPage {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
+  name        String   @default("Untitled")
+  html        String
+  prompt_json Json?
+  deployedUrl String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

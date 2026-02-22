@@ -6,12 +6,13 @@ import { NextResponse } from "next/server"
 
 export async function getMetaToken(): Promise<{ token: string } | NextResponse> {
   const session = await getServerSession(authOptions)
-  if (!session?.user?.email) {
+  const userId = (session?.user as { id?: string })?.id
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
+    where: { id: userId },
     include: { accounts: { where: { provider: "facebook" } } },
   })
 

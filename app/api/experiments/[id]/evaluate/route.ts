@@ -39,8 +39,8 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
   const access = await requireProjectAccess(experiment.projectId, "OPERATOR")
   if ("status" in access) return access
 
-  if (!Array.isArray(experiment.variants_json) || experiment.variants_json.length < 2) {
-    return NextResponse.json({ error: "Experiment requires at least two variants to evaluate." }, { status: 400 })
+  if (!Array.isArray(experiment.variants_json) || experiment.variants_json.length !== 2) {
+    return NextResponse.json({ error: "Experiment requires exactly two variants to evaluate." }, { status: 400 })
   }
 
   const [variantA, variantB] = experiment.variants_json
@@ -84,4 +84,3 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
 
   return NextResponse.json({ result, experiment: updatedExperiment, log })
 }
-

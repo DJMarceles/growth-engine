@@ -269,13 +269,10 @@ model LandingMetricDaily {
 }
 
 model LandingPage {
-  id          String   @id @default(cuid())
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id])
-  name        String   @default("Untitled")
-  html        String
-  prompt_json Json?
+  id         String   @id @default(cuid())
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id])
+  html       String
+  createdAt  DateTime @default(now())
   deployedUrl String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 }
